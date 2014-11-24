@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>DNS Block Lists for Cobalt servers</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<link rel="Stylesheet" rev="Stylesheet" href="../morse.css" />
+</head>
+<body>
+<h1>DNS Block Lists (DNSBLs)</h1>
+<h2>Using Sendmail to refuse connections from known spam sites</h2>
+<p> A DNS Block List works on a simple principle: If you know spam is coming from 
+ a given IP address (or block of IP addresses), you refuse to accept SMTP (mail) 
+ connections from that address. The DNSBL lets you wholesale the same kind of 
+ blocking done by <a href="access_db.html">the access control database</a>.</p>
+<p> Incoming mail to your Cobalt server arrives via the SMTP protocol. The sending 
+ SMTP server connects to the mail port of your Cobalt, where your Mail Transit 
+ Agent (MTA), sendmail, is listening. If sendmail is configured to use a DNSBL, 
+ before accepting the connection, it will check the IP address of the connecting 
+ machine against the Block List, which functions just like a normal Domain Name 
+ Server except that its response indicates the status of that address space in 
+ the Block List. If the address is blocked, sendmail refuses mail and sends an 
+ error message. If the address is not blocked, sendmail continues the mail transfer 
+ normally.</p>
+<p> DNSBLs, chosen well, can stop between half and nine-tenths of the spam sent 
+ your way. However, their use is very controversial, and a mail admin planning 
+ to use them should go in with their eyes open. First, <i>using a DNSBL places some 
+ of your anti-spam policy in someone else's hands</i>, just as surely as if you hired 
+ someone to <a href="access_db.html">edit your /etc/mail/access file</a>. You 
+ should be sure you agree with the policies of that other individual. Many of 
+ the DNSBLs are dedicated to blocking &quot;open relays&quot; (discussed elsewhere 
+ in these pages) and test sites aggressively to verify status; one DNSBL, ORBZ, 
+ was shut down after a lawsuit stemming from their testing. Many see relay testing 
+ as &quot;theft of service.&quot; </p>
+<p> Also, you need to balance the need to aggressively block spam with the need 
+ to allow valid mail through. It is worthwhile to keep an eye on the rejections 
+ in your mail logs in case a customer's or partner's site winds up on a block 
+ list.</p>
+<p>A good example of the hazards of delegating responsibility like this was created
+with the recent closing of relays.osirusoft.com. This widely-used DNSBL shut down by
+"blocking the world," putting every possible IP address in its blacklist. Sysadmins who 
+weren't paying attention wound up rejecting all incoming mail until they figured out 
+what was going on, and many who called the list from SpamAssassin are still tagging
+messages which aren't spam.</p>
+<p> The volunteers (in most cases) who operate the block lists aren't just trying 
+ to help you stop your spam; they're trying to pressure the sites used by spammers 
+ into tightening their configuration and cutting off the spammers. They do this 
+ by &quot;black holeing&quot; the rogue sites; by using a DNSBL, you are participating 
+ in the collective shunning of sites which allow use by spammers.</p>
+<p> We will assume that you have considered all this, and you still want to set 
+ up your Cobalt to use a DNSBL (or several). </p>
+<p> First, you need to select a DNSBL (or two). <a href="http://www.sdsc.edu/~jeff/spam/Blacklists_Compared.html">A 
+ good comparison is available</a>. Find one with a policy you agree with, which 
+ is fairly thorough but not so aggressive that it's unusable. For instance, <a href="http://selwerd.cx/xbl/">xbl.selwerd.cx</a> 
+ is so aggressive it is considered unusable by many; FlowGoAway, on the other 
+ hand, is targeted only on Flow Network mail and isn't effective as a general 
+ filter. For this example we will use <a href="http://www.blitzed.org/opm/index.phtml">opm.blitzed.org</a>, an open-proxy list.</p>
+<p> The following instructions for configuring sendmail to use a DNSBL are adapted 
+ from <a href="http://marc.theaimsgroup.com/?l=cobalt-users&amp;m=99705789100436&amp;w=2">Charlie 
+ Summers' post to the cobalt-users mailing list</a>, with permission.</p>
+<p> Please remember that following these instructions will, according to Cobalt/Sun, 
+ void your warranty, cause boils and possibly plagues of locusts, and will likely 
+ confuse the heck out of anyone who only knows the GUI. If you do this, your machine 
+ will no longer act in a way predictable to tech support. Make this configuration 
+ change at your own risk.</p>
+<p> If I haven't frightened you sufficiently, and you <i>still</i> want to set 
+ up sendmail to use a DNSBL, read on. However, please... if you aren't comfortable 
+ working as root, if you aren't used to editing config files, if you are nervous 
+ about screwing with your mail system, PLEASE find someone who is to do this for 
+ you. Also remember that many files will have different names depending on your 
+ Cobalt server; the instructions here are for a Qube3, but RaQs may have analogous 
+ files in different places under different names.</p>
+<p> Ready to play? Cool! After SSHing into the machine (you DO have telnet shut 
+ down, right?), we:</p>
+<table border="0" cellspacing="0" cellpadding="5">
+ <tr> 
+  <td> 
+   <pre>cd&nbsp;/usr/lib/sendmail-cf</pre>
+  </td>
+  <td>(change directory to mc home)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>su</pre>
+  </td>
+  <td>(you're going to be su/god from now on, so BE CAREFUL!)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>cd&nbsp;cf</pre>
+  </td>
+  <td>(enter the directory where .cf files are stored&mdash;in some systems, they 
+   will be out at the sendmail-cf level)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>cp&nbsp;cobalt.mc&nbsp;cobalt.mc_orig</pre>
+  </td>
+  <td>(back up the original .mc file)</td>
+ </tr>
+</table>
+<p> Now modify your cobalt.mc to taste, using instructions from <a href="http://www.sendmail.org/m4/anti-spam.html">sendmail.org</a>; 
+ note that I probably wouldn't remove anything from here unless you <i>really</i> 
+ know what you're doing, it should be completely safe to add additional features. 
+ I've successfully added rbl and blacklist_recipients, among others. Note that 
+ the RaQ3 does NOT contain dnsbl.m4, so you'll need to use rbl instead.</p>
+<p> And if you don't know how to edit the mc file, PLEASE read the information 
+ available at www.sendmail.org - I can't tell you exactly how to edit your file, 
+ since I don't know how you want to set up your sendmail. I can tell you that 
+ to start I added these lines in the &quot;# features&quot; section before the 
+ &quot;divert (-1)&quot; line:</p>
+<pre>FEATURE(blacklist_recipients)dnl
+FEATURE(`dnsbl', `opm.blitzed.org', `Rejected - see http://www.blitzed.org/opm/')dnl</pre>
+<p> ...but since I can't stop tinkering, I've mucked with some other stuff since 
+ then. Make SURE you examine the docs at <a href="http://www.sendmail.org">sendmail.org</a>...those 
+ &quot;dnl&quot; bits ain't optional, kiddies. (And feel free to add comments 
+ to the top of the cobalt.mc file to note the date and changes; some day months 
+ from now you might need to know what you did in there.)</p>
+<p>One modification would refer to your own email policy rather than to the 
+blacklist page. Here's what we use at Sinauer:</p>
+<pre>
+FEATURE(`dnsbl', `opm.blitzed.org', `"Mail from open proxy refused (blitzed): see http://www.sinauer.com/contact/email.php?id=" $&{client_addr}')dnl
+</pre>
+<p>This refers people to <a href="http://www.sinauer.com/contact/email.php">a page
+explaining our email policy</a>, and includes the IP of the server which was rejected,
+which I use in PHP to create links to the search pages of the various lists we use.
+This explains how users can get in touch with us, and the reason we rejected their mail,
+in a manner which is much more diplomatic and easier to understand than a simple blow-off.
+Assuming the spammers aren't reading it at all, anyone who comes to that page is either
+unknowingly running an insecure server, or is falsely accused; either way, you catch
+more flies with honey.
+</p>
+<p> Now that your cobalt.mc file has been edited to taste, you need to run it 
+ through the m4 program. If you were in a subdirectory before (Qube users), move 
+ the .mc file back out to the sendmail-cf directory. To invoke m4:</p>
+<pre>m4 m4/cf.m4 cobalt.mc &gt;new_sendmail.cf</pre>
+<p> ...to create a file named new_sendmail.cf. Why not sendmail.cf? We'll get 
+ to that.</p>
+<p> IF you have POP-BEFORE-SMTP installed:</p>
+<p> I know you <i>should</i> probably uninstall and reinstall this package after 
+ the changes are made, but after reading RaQ3-en-System-4.0.7-9229-4.0.7-9229.uninst 
+ I can tell you that there is such a glaring error in the uninstall script that 
+ there almost HAVE to be more, which may or may not cause problems down the road. 
+ I decided in the interest of not screwing anything up, it would make more sense 
+ to manually edit the new_sendmail.cf file to add the pieces required instead 
+ of taking the chance that a bad uninstall would make a mess of a reinstall. Your 
+ mileage may vary.</p>
+<p> There are two places in the new new_sendmail.cf file you need to rework to 
+ match the original sendmail.cf; the first is immediately after the &quot;Access 
+ list database (for spam stomping)&quot; section, the second is within the &quot;check_rcpt 
+ -- check SMTP `RCPT TO:' command argument&quot; section; compare /etc/sendmail.cf 
+ and /usr/lib/sendmail-cf/new_sendmail.cf and manually add to new_sendmail.cf 
+ the appropriate sections. (I've found that the Mac text editor <a href="http://www.barebones.com">BBEdit</a>'s 
+ Find Differences command is vastly helpful here.)</p>
+<p> Also remember that using a new sendmail.cf will muck with your MaxMessageSize 
+ as set in the GUI; if you want to be a completest, do a search on MaxMessageSize 
+ and change the value here to the one in the sendmail.cf file which is the one 
+ you set in the GUI. (The GUI will still be somewhat confused about it, and may 
+ show a blank box there. I haven't had the courage to screw with it in the GUI, 
+ fearing it may overwrite all the other changes.)</p>
+<p>Before going further, Peter Frederick pointed out that <a href="http://mail-abuse.org/rbl/usage.html#DNSuse">mail-abuse.org</a> 
+ shows how you can test your configuration before going live:</p>
+<p>You may test the RBL<sup>SM</sup> checking against addresses 127.0.0.2 (will be listed 
+ on the RBL<sup>SM</sup>) and 127.0.0.1 (will not). The following dialog shows how to run 
+ Sendmail in address test mode to do this: </p>
+<pre>
+
+	$ sendmail -bt -C /config/to/test/sendmail.cf
+	&gt; .D{client_addr}127.0.0.1
+	&gt; Basic_check_relay &lt;&gt;
+	rewrite: ruleset 192   input: &lt; &gt;
+	rewrite: ruleset 192 returns: OK
+	&gt; .D{client_addr}127.0.0.2
+	&gt; Basic_check_relay &lt;&gt;
+	rewrite: ruleset 192   input: &lt; &gt;
+	rewrite: ruleset 192 returns: $# error $@ 5 . 7 . 1 $: "Mail from " 127 . 0 . 0 . 2 " refused; see http://www.mail-abuse.org/cgi-bin/lookup?127.0.0.2"
+	&gt; CTRL/D
+</pre>
+<p>Assuming this worked, now we:</p>
+<table border="0" cellspacing="0" cellpadding="5">
+ <tr> 
+  <td> 
+   <pre>cd /etc/mail</pre>
+  </td>
+  <td>(Change to sendmail.cf location)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>mv sendmail.cf sendmail.cf_beforem4</pre>
+  </td>
+  <td>(back up sendmail.cf)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>cp /usr/lib/sendmail-cf/new_sendmail.cf sendmail.cf</pre>
+  </td>
+  <td>(bring in new sendmail.cf)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>/etc/rc.d/init.d/sendmail restart</pre>
+  </td>
+  <td>(stop/start sendmail)</td>
+ </tr>
+</table>
+<p> You should see:</p>
+<pre>Shutting down Mail Service: sendmail ok
+Setting up Mail Service: sendmail</pre>
+<p> ...if you don't, stop sendmail (/etc/rc.d/init.d/sendmail stop), wait a few 
+ moments, and start it (/etc/rc.d/init.d/sendmail start) instead. I suppose I 
+ _could_ have used the interface, but since we're already here...</p>
+<p> Now <i><b>IMMEDIATELY CHECK TO MAKE SURE SMTP IS WORKING CORRECTLY!</b></i> 
+ No, really...send some mail through your server, or at least attempt a telnet 
+ connection on port 25. If it isn't, you can easily:</p>
+<p>&nbsp; </p>
+<table border="0" cellspacing="0" cellpadding="5">
+ <tr> 
+  <td> 
+   <pre>cd /etc/mail</pre>
+  </td>
+  <td>(redundant, I know)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>mv sendmail.cf sendmail.cf_problem</pre>
+  </td>
+  <td>(move out the problem child)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>mv sendmail.cf_beforem4 sendmail.cf</pre>
+  </td>
+  <td>(move in the one we know works)</td>
+ </tr>
+ <tr> 
+  <td> 
+   <pre>/etc/rc.d/init.d/sendmail restart</pre>
+  </td>
+  <td>(stop/start sendmail)</td>
+ </tr>
+</table>
+<p> ...to revert to your previous configuration. But if it ain't running, and 
+ you <i>don't</i> check it, you're really gonna hate yourself in the morning.</p>
+<p> If everything IS working fine, you might consider backing up the sendmail.cf 
+ so that if the GUI stomps on it, you can get it back quickly; I use the date 
+ as part of my backup files, so if I were backing it up today, I'd do:</p>
+<pre>cd /etc/mail
+cp sendmail.cf sendmail.cf_20010805</pre>
+<p> ...but you can, of course, use whatever naming scheme makes sense to you.</p>
+<p> That's it! You're now using a DNSBL on your Cobalt. </p>
+<p> To see how they're doing, run the following command as root:</p>
+<pre>grep -i &quot;reject&quot; /var/log/maillog | more</pre>
+<p> or</p>
+<pre>grep -ic &quot;reject&quot; /var/log/maillog</pre>
+<p> which will just produce a count of mail rejected. Replace &quot;reject&quot; 
+ with the domain of the DNSBL to get an exact check on that DNSBL if you're using 
+ more than one.</p>
+<p style="border-bottom: 1px solid #000;">If you're using a DNSBL, I strongly suggest you consider using <a href="http://www.habeas.com/">Habeas</a> 
+ as well. I'm playing with it on our Qube3; <a href="habeas.html">here's how it's going.</a></p>
+<p><a href="http://www.parkermorse.net/"> Parker Morse</a>, <a href="http://bluebird.sinauer.com/~morse/">resident 
+ geek</a>, <a href="http://www.sinauer.com/">Sinauer Associates</a></p>
+</body>
+</html>

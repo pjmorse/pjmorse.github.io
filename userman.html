@@ -1,0 +1,186 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (X11; U; Linux 2.2.5-15 i586) [Netscape]">
+   <title>duv User Manual</title>
+</head>
+<body>
+
+<center>
+<h1>
+duv User Manual</h1></center>
+
+<center><b><font size=+1>duv version 2.0&nbsp; 2005-11-01</font></b>
+<br><b>Last updated 2005-11-01</b>
+<br><b><font size=+1>BitWagon Software LLC</font></b>
+<br><b><font size=+1>http://www.BitWagon.com</font></b>
+</center>
+<b><font size=+1><a href="#overview">duv overview</a></font></b>
+<br><b><font size=+1><a href="#accounting">Accounting for disk space</a></font></b>
+<br><b><font size=+1><a href="#installing">Installing duv</a></font></b>
+<br><b><font size=+1><a href="#invocation">Invocation and input</a></font></b>
+<br><b><font size=+1><a href="#limitations">Limitations</a></font></b>
+<br><b><font size=+1><a href="#tips">Tips</a></font></b>
+<center>Copyright &copy; 2001, 2005 BitWagon Software LLC.&nbsp; All rights reserved.</center>
+
+<hr WIDTH="100%">
+<h1>
+duv&nbsp;<a NAME="overview"></a>overview</h1>
+<b><font size=+1>duv</font></b><sup><font size=-2>TM</font></sup> Visual
+Disk Usage lets you see where the disk space went.&nbsp; duv draws a multicolor
+picture with area proportional to disk usage.&nbsp; The picture may be
+based on file and directory hierarchy, ownership, last portion of filename,
+or number of days since last access or modification.&nbsp; As you move
+the pointer over the display, duv annotates the filename and size.&nbsp;
+As you enter commands via keyboard or button clicks, duv enters or leaves
+portions of the hierarchy, sorts the displayed regions by size, or does
+a print/copy/clip of the complete pathname.&nbsp; duv also can display
+remaining free space, and generate a PostScript rendering of the current picture
+for printing.
+<h1>
+<a NAME="accounting"></a>Disk space accounting</h1>
+duv accounts for space used by a file as, "How much more free space would
+there be if the file were deleted?"&nbsp; This works well until there are
+links.&nbsp; In UNIX file systems, space is really allocated for <i>inodes,</i>
+and a filename is just a pointer to the inode.&nbsp; If there is only one
+pointer to an inode then it is easy to think of the space as belonging
+to the filename.&nbsp; But if there are two or more filenames linked to
+an inode, then it is no longer so easy.&nbsp; duv handles this by constructing
+a top level pseudo directory called <b><tt><font size=+1>&amp;</font></tt></b>
+with a sub directory for each regular file inode that has two or more links.&nbsp;
+The entries in the sub directory are the complete pathnames that are linked
+to the inode. The space for the inode is divided evenly among the links,
+with any remainder assigned to the sub directory.&nbsp; Soft links (<tt>/bin/ln
+-s</tt>) are just name-to-name translations.&nbsp; If the name of the target
+is short enough (59 bytes or less on ext2) then the soft link itself takes
+no space other than directory space in the origin directory.
+<p>The space required to make a backup copy on a storage medium can be
+either more or less than the usage reported by duv, depending on the use
+of compression, filtering (selection based on name, ownership, permissions,
+time of last access or modification, etc.), policies with regard to
+links, and 
+recognition of blocks which are all zero.
+<br>&nbsp;
+<h1>
+<a NAME="installing"></a>Installing duv</h1>
+duv is distributed as a compressed tarball source archive,
+and as pre-compiled executables for i586, x86_64, and ppc32.
+Build an executable from source,
+or put the appropriate pre-compiled executable somewhere in <tt>$PATH</tt>,
+such as <tt>$HOME/bin</tt>, <tt>/usr/local/bin</tt>, etc.
+<br>&nbsp;
+<h1>
+<a NAME="running"></a>Running duv</h1>
+<tt>duv <i>flags...</i> <i>paths...</i></tt>
+<p>duv prints a banner and all query output to stderr.
+<br>
+<table>
+<caption>
+<h3>
+duv flags</h3>
+</caption>
+<tr> <th>short</th> <th>long</th> <th>description</th> </tr>
+<tr> <td></td> <td><tt>--help</tt></td>
+  <td>print usage summary, then exit</td> </tr>
+<tr> <td><tt>-l<i>n</i></tt></td> <td><tt>--lg=<i>n</i></tt></td>
+  <td>set logical display size to 2**<i>n</i> dots; default <i>n</i>=16</td> </tr>
+<tr> <td><tt>-m<i>n</i></tt></td> <td><tt>--magnify=<i>n</i></tt></td> 
+  <td>set dot size to <i>n</i> by <i>n</i> pixels; default 2 by 2</td> </tr>
+<tr> <td><tt>-h</tt></td> <td><tt>--horizontal</tt></td> 
+  <td>horizontal orientation (landscape) when 2:1 (default)</td> </tr>
+<tr> <td><tt>-v</tt></td> <td><tt>--vertical</tt></td> 
+  <td>vertical orientation (portrait) when 2:1</td> </tr>
+<tr> <td><tt>-P<i>"cmd"</i></tt></td> <td><tt>--print="<i>lpr</i>"</tt></td>
+  <td>print filter command; substitutions: <tt>%n</tt> serial number;
+    <tt>%k</tt> kind (stroke, fill, text)</td> </tr>
+<tr><td><tt>-L</tt></td><td><tt>--nolinks</tt></td>
+  <td>force n_hardlink==1 (some DVD/CD)</td></tr>
+<tr><td><tt>-M</tt></td><td><tt>--nomount</tt></td>
+  <td>do not traverse mount points</td></tr>
+<tr> <td><tt>-u<i>n</i></tt></td> <td><tt>--uids=<i>n</i></tt></td> 
+  <td>restrict to <i>n</i> UID lookups; default 10</td> </tr>
+<tr> <td><tt>-g<i>n</i></tt></td> <td><tt>--gids=<i>n</i></tt></td> 
+  <td>restrict to <i>n</i> GID lookups; default 10</td> </tr>
+<tr> <td><tt>-w<i>n</i></tt></td> <td><tt>--fdlimit=<i>n</i></tt></td> 
+  <td>restrict to <i>n</i> file descriptors; default 512</td> </tr>
+<tr> <td><tt>-8</tt></td> <td></td> 
+  <td>TrueColor display acts as 8-bit PseudoColor instead</td> </tr>
+<tr> <td><tt>-a</tt></td> <td><tt>--noannotate</tt></td> 
+  <td>omit annotation of name and size</td> </tr>
+<tr> <td><tt>-f</tt></td> <td><tt>--nofree</tt></td>
+  <td>omit free space</td> </tr>
+<tr> <td><tt>-c</tt></td> <td><tt>--nocopy</tt></td> 
+  <td>omit copy of pathname</td> </tr>
+<tr> <td><tt>-k</tt></td> <td><tt>--noclip</tt></td>
+  <td>omit clip of pathname</td> </tr>
+<tr> <td><tt>-p</tt></td> <td><tt>--noprint</tt></td> 
+  <td>omit print of pathname</td> </tr>
+<tr> <td></td> <td><tt>--</tt></td> 
+  <td>optional explicit end of flags</td> </tr>
+</table>
+
+<br>&nbsp;
+<table cellspacing=5>
+<caption>
+<h3>
+duv input</h3>
+</caption>
+
+<tr> <th>action</th> <th>key</th> <th>button</th> </tr>
+
+<tr> <td ALIGN=RIGHT>print+copy+clip pathname</td> <td> <center>any unused</center> </td>
+  <td ALIGN=RIGHT>Button1</td> </tr>
+<tr> <td ALIGN=RIGHT>enter directory</td> <td> <center><tt>+ F5 F4</tt></center> </td>
+  <td ALIGN=RIGHT>Shift+Button1</td> </tr>
+<tr> <td ALIGN=RIGHT>leave directory</td> <td> <center><tt>- F6 F3</tt></center> </td>
+  <td ALIGN=RIGHT>Control+Button1</td> </tr>
+<tr> <td ALIGN=RIGHT>sort by size</td> <td> <center><tt>* F7 F2</tt></center> </td>
+  <td ALIGN=RIGHT>Control+Shift+Button1</td> </tr>
+<tr> <td ALIGN=RIGHT>cycle dir->uid->&nbsp;&nbsp;.->aday->mday</td> <td> <center><tt>/ F8 F1</tt></center> </td>
+  <td ALIGN=RIGHT>Mod1Mask+Button1</td> </tr>
+<tr> <td ALIGN=RIGHT>move pointer dot-by-dot</td> <td> <center>arrow keys</center> </td>
+  </tr>
+<tr> <td ALIGN=RIGHT>print text to <tt>--print</tt> filter</td>
+  <td> <center><tt>#</tt></center> </td> <td>[%k==>3]</td></tr>
+<tr> <td ALIGN=RIGHT>(stroke) print PostScript to <tt>--print</tt> filter</td> 
+  <td> <center><tt>!</tt></center> </td> <td>[%k==>1]</td></tr>
+<tr> <td ALIGN=RIGHT>(fill) print PostScript to <tt>--print</tt> filter</td> 
+  <td> <center><tt>%</tt></center> </td> <td>[%k==>5]</td></tr>
+</table>
+
+<br>&nbsp;
+<h1>
+<a NAME="limitations"></a>Limitations</h1>
+<ul>
+<li>Total disk usage must be less than 2TB (2048GB; 2**41 bytes).
+<li>The number of file systems must not exceed 128.
+<li>The product of the total number of files times the number of
+file systems must not exceed 2**31.
+<li>The number of entries in a single directory must be less than 1,048,576.
+<li>The number of distinct uids or gids must not exceed 2**24 (16M).
+</ul>
+<h1>
+<a NAME="tips"></a>Tips</h1>
+In many cases, adding the option <tt>nodiratime</tt> to <tt>/etc/fstab</tt>
+will enable faster data gathering. Example:
+<table>
+<tr>
+<td><tt>&nbsp; /dev/hda7 /home ext2 defaults,nodiratime 1 2</tt></td>
+</tr>
+</table>
+<i>Caution:</i> Some backup programs may use time of last access to a directory
+to make decisions about what to backup. Consult the documentation for your
+backup program, or ask your system administrator.
+<p>On a busy system, or when several instances of duv are gathering data
+at the same time, it may be more friendly to use the invocation option
+<tt>--fdlimit=64</tt> to reduce the chance that other processes
+will run out of file descriptors.  duv copes dynamically, but many
+other processes do not.
+<p>On some systems, converting every numerical UID to a username can
+take a long time.  Adjust with <tt>--uids=<i>n</i></tt>, which limits
+lookups to the UIDs with the largest usage.
+<p>If the usage reported by duv does not seem right, then please use standard
+utilities (<tt>du</tt>, <tt>df</tt>, <tt>ls</tt>, <tt>sort</tt>, etc.) instead.
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+<title>Habeas for Cobalt servers</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<link rel="Stylesheet" rev="Stylesheet" href="../morse.css">
+</head>
+<body>
+<h1>Bypassing DNS Block Lists (DNSBLs) with Habeas</h1>
+<h2>Check for some headers which will &quot;whitelist&quot; anyone using them</h2>
+
+<p><b>Ed. Note:</b> To date, I <em>have not</em> managed to successfully use Habeas on our system. This document is an incomplete work in progress; please let me know if you've had more luck than I have with Habeas!
+</p>
+<p>The <a href="habeas.html">Habeas Sender Warranted Email</a> system, introduced 
+ in 2002, is intended to counterbalance the problem of over-zealous DNSBLs and 
+ other filters by providing a method for accepting mail which uses the &quot;right 
+ headers&quot;. Habeas suggests a set of headers which include a trademark owned 
+ by Habeas and a haiku which they have copyrighted. They license the use of these 
+ headers (freely to individuals), and the license agreement includes strenous 
+ anti-spam language. Spammers who use the headers inappropriately are then open 
+ to suit under trademark and copyright law, which corporate America has made pretty 
+ heavy. They are also included on Habeas' own DNSBL, so scofflaws are still checked.</p>
+<p>If you've had problems with DNSBLs which cut your spam load also blocking valid 
+ email, add Habeas to your sendmail mix following these instructions, and ask 
+ them to include Habeas headers in their mail.</p>
+<p>I set up our Qube3 to handle Habeas using <a href="http://www.habeas.com/support/sendmail-in.htm">instructions 
+ on their site</a>.</p>
+<h3>Download the m4 macro</h3>
+<p>First you need to download a macro for m4. This is the chunk of code that allows 
+ you to put Habeas in your cobalt.mc file!</p>
+<pre>cd /usr/lib/sendmail-cf/feature</pre>
+<pre>wget http://www.habeas.com/support/habeas_verification.m4</pre>
+<p>Despite their instructions, I couldn't find any need to edit this file; the 
+ string they wanted to edit (&quot;habeas.test&quot;) is already set to the Habeas 
+ Infringers List zone (hil.habeas.com). Check it out, though, to make sure it's 
+ all kosher:</p>
+<pre>more habeas_verification.m4</pre>
+<p>Assuming it's OK, we can move on to editing the .mc file. Assuming you've already 
+ done such an edit at least once before (for the DNSBL) I won't go through all 
+ the details again. Add the following line <b>above </b>your current DNSBLs:</p>
+<pre>FEATURE(`habeas_verification')dnl
+</pre>
+<p>Notice that any FEATURE(`dnsbl') lines before this one will be run for ALL 
+ mail; lines after it will only be run if the incoming mail does not have the 
+ Habeas SWE headers.</p>
+<p>Unfortunately, there's something wrong with these instructions; they disabled 
+ all our DNSBLs. I've dead-ended here and emailed Habeas support for help. I will 
+ continue this page when I hear back from them.</p>
+<hr noshade size="1">
+<p><a href="http://www.parkermorse.net/"> Parker Morse</a>, <a href="http://bluebird.sinauer.com/~morse/">resident 
+ geek</a>, <a href="http://www.sinauer.com/">Sinauer Associates</a></p>
+</body>
+</html>

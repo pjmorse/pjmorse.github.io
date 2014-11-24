@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+	<title>Installing a procmail-based filter</title> 
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<link rel="Stylesheet" rev="Stylesheet" href="../morse.css" />
+</head>
+<body>
+<h1>Installing a procmail-based filter</h1> 
+<h2>Deal with viral attachments and tag spam for filtering</h2> 
+<p>
+	The mail delivery route on your Cobalt goes through three stages. The Mail Transfer Agent (MTA) is sendmail, and it handles connections between hosts. We dealt with the role sendmail plays in the spam-stopping effort in the previous two steps, <a href="access_db.html">using the access control database</a> and <a href="dnsbl.html">using DNS block lists</a>. The remaining two steps are the Mail Delivery Agent (MDA) which gets mail from sendmail to your users' inboxes, and the Mail User Agent (MUA) which is the POP or IMAP client used by the user to get mail from the server. For the anti-spam task, you have two options at this stage. The MDA can examine and discard mail it suspects is spam, or it can tag suspected spam and hand it along to the MUA. Most modern MUAs can then use these tags to discard or file junk mail unread.
+</p>
+<p>
+	Almost universally, the MDA is <a href="http://www.procmail.org/">procmail</a>, which features a very powerful filtering mechanism as well as (in my opinion) some of the most obscure documentation imaginable. There is a mailing list for Procmail as well, but they are very prickly about helping anyone who hasn't fully digested the previously-mentioned obscure documentation. Procmail is already installed on your Cobalt, and is probably already running; you just need to configure it to help. (If you're interested in learning more about <i>why</i> various procmail snippets quoted here work the way they do, start with <a href="http://www.ii.com/internet/robots/procmail/qs/">Nancy McGough's procmail quick start</a>.)
+</p>
+<p>
+	Fortunately, there are &quot;canned&quot; or pre-written filters which you can download and install which save you from re-inventing filters to solve problems like:
+</p>
+<ul>
+	<li>
+		How can I &quot;de-fang&quot; dangerous HTML in email messages?
+	</li>
+	<li>
+		How can I strip executable attachments from incoming email?
+	</li>
+	<li>
+		How can I tag incoming spam?
+	</li>
+</ul>
+<p>
+	While procmail can filter attachments and redirect spam to /dev/null, the best use of procmail in the spam fight is tagging, which adds text to the headers and/or subject line of incoming spam which makes it by your block lists. Your users can use the filtering built in to their MUA on these tags, allowing them to filter spam into a junk box and periodically check that box for false positives.
+</p>
+<p>
+	Here I will describe implementation of one commonly used anti-spam filter on our Qube3, <a href="http://spamassassin.taint.org/">SpamAssassin</a>, and a attachment-checking filter, <a href="http://www.impsec.org/email-tools/procmail-security.html">the Sanitizer</a>, and provide links to a number of other procmail-invoked packages which can be used for virus scanning or spam filtering.
+</p>
+<p>
+	Procmail checks a global configuration file, and then also uses per-user configuration files (if they exist) before delivery. We suggest trying out filters on your own account - edit the .procmailrc file in your home directory - before applying them to the /etc/procmailrc file, which is the global configuration.
+</p>
+<h2>Downloading and installing SpamAssassin</h2> 
+<p>
+	SpamAssassin is a perl module, with a number of dependencies. You will have to download the SpamAssassin package and the dependencies and install them. It can be done using CPAN from the shell, as outlined in the installation notes, but on Cobalts this has an unfortunate tendency to attempt to upgrade your Perl installation, which can lead to a wide variety of confusing problems. For example, using a newer version of Perl on my Qube3 rendered the LCD non-functional (which keeps one from properly shutting down the machine, among other things). To avoid this, here, we'll download an install the components individually. Fortunately this is relatively easy. Here I follow <a href="http://marc.theaimsgroup.com/?l=cobalt-users&amp;m=103771479719624&amp;w=2">an outline posted to cobalt-users</a> by Kim Schulz.
+</p>
+<div style="float: left; width: 40%; background-color: #ccc; padding: 5px; border: 1px solid #000; margin: 5px;">
+<p>
+<b>Note on newer versions of SpamAssassin:</b> Versions of SpamAssassin newer than about 2.50 (2.55 is current as of this writing) require a newer version of Perl than is installed by default on Cobalts. To run them, you'll need to install an up to date Perl into an alternate path, like /usr/local/bin/perl. You can then install all the modules needed for SA, including SA itself, using "/usr/local/bin/perl Makefile.PL" instead of "perl Makefile.PL" as shown in this document.
+</p>
+<p>
+Doing this with CPAN, however, is a prescription for screwing up your Cobalt unless you are remarkably careful and able to recover unexpected changes. Following <a href="http://list.cobaltfacts.com/pipermail/cobaltfacts/20030724/001399.html">the clue Steve Werby posted on the cobaltfacts list</a>, we can walk through that here.
+</p>
+<p>First you need to download the Perl source.</p>
+<pre>
+# wget http://www.cpan.org/src/stable.tar.gz
+</pre>
+<p>
+Undo this with "tar -xzvf stable.tar.gz" and cd into the new Perl directory created by the unpacking. Inside that directory, type this:
+</p>
+<pre>
+perl-5.8.0# ./configure.gnu --prefix=/usr/local
+</pre>
+<p>Once this is done, you should be able to go on with the install using "make" and "make install" as usual for perl. There's only one more step, once this is all done.</p>
+<p>
+Your standard Cobalt perl install is still at /usr/bin/perl5.00503 and your new Perl 5.8 will be at /usr/local/bin/perl. However, our install has probably also put a symbolic link at /usr/bin/perl pointing to /usr/local/bin/perl! We need to fix that to avoid all kinds of ugliness with our Cobalt.
+</p>
+<p>
+cd to /usr/bin and give these commands (don't panic):
+</p>
+<pre>
+bin# ls -l perl*  # Notice the new symlink
+bin# rm perl
+bin# ln -s perl5.00503 perl
+bin# ls -l perl*
+</pre>
+<p>
+What you've done is remove the incorrect symlink and put in a correct one to the "correct" perl (verify with the ls -l perl* that the Cobalt one is at perl5.00503).
+</p>
+<p>
+If you've <em>really</em> munged your perl, you'll have to re-install from the Cobalt RPM. Steve explained <a href="http://list.cobaltfacts.com/pipermail/cobaltfacts/20030728/001421.html">how to get started</a> on the cobaltfacts list.
+</p>
+<p>
+Now, proceed with your SpamAssassin installation, substituting "/usr/local/bin/perl" for "perl" when running Makefile.PL files for SA modules.
+</p>
+<p>
+Note that once you have this "alternate Perl" installed, you can use CPAN <em>through this perl binary</em> to update SpamAssassin, modules, etc.. Just be careful to invoke CPAN as <code>/usr/local/bin/perl -MCPAN -e shell</code> rather than <code>perl -MCPAN -e shell</code>.
+</p>
+<p>
+<b>Alternately,</b> Bob Noordam wrote <a href="http://cobalt.depopo.net/html/q3__perl5_8.html">a HOWTO for installing a parallel Perl</a> on a Qube3.
+</p>
+</div>
+<p>
+	First, SSH to your Cobalt and make yourself root. You should make a directory somewhere which will contain the install files; I used /usr/local/src/spamassassin/. cd to that directory, then:
+</p>
+<pre># wget http://spamassassin.taint.org/released/Mail-SpamAssassin-2.43.tar.gz
+# wget http://www.cpan.org/modules/by-module/Pod/podlators-1.22.tar.gz 
+# wget http://www.cpan.org/authors/id/DEWEG/Time-HiRes-01.20.tar.gz   
+# wget http://www.cpan.org/modules/by-module/Pod/PodParser-1.18.tar.gz 
+# tar -xzvf Mail-SpamAssassin-2.31.tar.gz 
+# tar -xzvf PodParser-1.18.tar.gz 
+# tar -xzvf Time-HiRes-01.20.tar.gz   
+# tar -xzvf podlators-1.22.tar.gz 
+# cd PodParser-1.18 
+PodParser-1.18# perl ./Makefile.PL 
+PodParser-1.18# make
+PodParser-1.18# make test
+PodParser-1.18# make install
+PodParser-1.18# cd ../podlators-1.22 
+podlators-1.22# perl ./Makefile.PL 
+podlators-1.22# make
+podlators-1.22# make install
+podlators-1.22# cd ../Time-HiRes-01.20 
+Time-HiRes-01.20# perl ./Makefile.PL 
+Time-HiRes-01.20# make
+Time-HiRes-01.20# make test
+Time-HiRes-01.20# make install
+Time-HiRes-01.20# cd ../Mail-SpamAssassin-2.43
+Mail-SpamAssassin-2.43# perl ./Makefile.PL
+Mail-SpamAssassin-2.43# make
+Mail-SpamAssassin-2.43# make test
+Mail-SpamAssassin-2.43# make install UNINST=1
+</pre> 
+<p>
+	A few details about this: 
+</p>
+<p>
+	<b>First</b>, you should check <a href="http://spamassassin.taint.org/">the SpamAssassin website</a> and <a href="http://www.cpan.org">CPAN</a> to make sure you have the most recent versions of these packages; don't use SpamAssassin 2.43 just because that's what I have in this example. As of 16 January, 2004, the most recent version is 2.62, and every other package used in the above example has a newer version available. (See links below.)
+</p>
+<p>
+	<b>Second</b>, In some cases, after the &quot;perl ./Makefile.PL&quot; step, you will be warned about yet another package which is missing. You can <a href="http://search.cpan.org/">search CPAN for that module</a> and then download and install it using the same steps above (wget, tar -xzvf, cd, perl ./Makefile.PL, make, make test, make install). In addition to the four modules listed above, I also needed File-Spec-0.82, HTML-Parser-3.26, and HTML-Tagset-3.03 in order to pass all tests on my Qube3. When I recently upgraded so SpamAssassin 2.52, the Makefile.PL suggested I upgrade ExtUtils::MakeMaker as well. You may need others.
+</p>
+<p>
+Here are CPAN links to all the modules I've needed or found useful for my SpamAssassin (and Razor) installations. This list is probably not exhaustive, but it should give you an idea how to find any modules I haven't included here. These are up-to-date as of 16 January 2004; check the "Other Releases" drop-down for newer versions!
+</p>
+<ul>
+	<li><a href="http://search.cpan.org/~jmason/Mail-SpamAssassin-2.61/">Mail-SpamAssassin-2.61</a></li>
+	<li><a href="http://search.cpan.org/~rra/podlators-1.27/">podlaters-1.27</a></li>
+	<li><a href="http://search.cpan.org/~marekr/PodParser-1.26/">PodParser-1.26</a></li>
+	<li><a href="http://search.cpan.org/~jhi/Time-HiRes-1.55/">Time-HiRes-1.55</a></li>
+	<li><a href="http://search.cpan.org/~kwilliams/File-Spec-0.87/">File-Spec-0.87</a></li>
+	<li><a href="http://search.cpan.org/~gaas/HTML-Parser-3.35/">HTML-Parser-3.35</a></li>
+	<li><a href="http://search.cpan.org/author/SBURKE/HTML-Tagset-3.03/">HTML-Tagset-3.03</a></li>
+	<li><a href="http://search.cpan.org/~mschwern/ExtUtils-MakeMaker-6.21/">ExtUtils-MakeMaker-6.21</a></li>
+	<li><a href="http://search.cpan.org/~gaas/Digest-SHA1-2.07/">Digest-SHA1-2.07</a></li>
+</ul>
+<p>
+	<b>Third</b>, sometimes there will be older versions of these modules already installed on your Cobalt. You can replace these with the newest, freshest version by replacing &quot;make install&quot; with &quot;make install UNINST=1&quot; (as the last line of the script above shows.) Watch the initial output of &quot;make install&quot; - it will suggest using the UNINST=1 flag if it's really needed.
+</p>
+<p>
+	Now that everything is installed, you can delete many of the files in your install directory (certainly all the .tar.gz files). Don't delete the /Mail-SpamAssassin-2.43 directory just yet.
+</p>
+<p>
+	You may find it useful at this point to check your configuration. The configuration file is at /etc/mail/spamassassin/local.cf; you can learn more about it by giving the command &quot;perldoc Mail::SpamAssassin::Conf&quot; at the shell prompt. You may want to start by setting your required_hits value to 8.0, more tolerant than the default 5.0.
+</p>
+<p>
+	You should follow the documentation suggestion testing the program:
+</p>
+<pre>Mail-SpamAssassin-2.43# spamassassin -t &lt; sample-nonspam.txt &gt; nonspam.out   
+Mail-SpamAssassin-2.43# spamassassin -t &lt; sample-spam.txt &gt; spam.out </pre> 
+<p>
+	&quot;Verify (using a text viewer, ie. 'less' or 'notepad') that nonspam.out has not been tagged as spam, and that spam.out has. The files should contain the full text and headers of the messages, the "spam.out" message should be annotated with '****SPAM****' in the subject line and a report from SpamAssassin, and there should be no errors when you run the commands.&quot;
+</p>
+<p>
+	Now you have most of the useful files for SpamAssassin in place. The next step is to actually filter your mail with it.
+</p>
+<h2>Starting SpamAssassin filtering your mail</h2> 
+<p>
+	The SpamAssassin program is already installed on your system, thanks to &quot;make install,&quot; but you need to have Procmail call it while delivering your mail for it to be useful. Start by going to your own directory. You should NOT be root at this point. If you don't already have a .procmailrc file, create one with some basic data: 
+</p>
+<pre>PATH=/bin:/usr/bin:/usr/bin</pre> 
+<p>
+	Now, add the call to SpamAssassin, as suggested in the documentation:
+</p>
+<pre>:0fw 
+| spamassassin </pre> 
+<p>
+	Now, send yourself a few test emails. Better still, let this work on your mail for a day or two. Check the raw headers of the incoming mail to verify that SpamAssassin is tagging incoming mail; adjust the /etc/mail/spamassassin/local.cf to try to catch as much spam as possible without tagging &quot;real&quot; mail. Then come back to this.
+</p>
+<p>
+	<b>Gotcha:</b> Procmail versions newer than 3.14 will not &quot;trust&quot; your .procmailrc if either it or your home directory are world or group writable. Rob Prince notes that both files tend to be world writeable on RaQ4s. Do &quot;ls -al&quot; and see what is at the far left of the line for .procmailrc. It should say &quot;<code>-rw-r-----</code>&quot;; if it says &quot;<code>-rw-rw----</code>&quot; or &quot;<code>-rw-rw-rw-</code>&quot;, you're going to need to change permissions. 
+</p>
+<pre>~# chmod 640 .procmailrc</pre> 
+<p>
+	should do the trick. Go up one directory (<code>cd ..</code>) and do the same check, &quot;ls -al&quot; and check the permissions. If your .procmailrc isn't working, procmail will log errors for every incoming message; check the /var/log/ directory for those logs.
+</p>
+<h2>Sitewide SpamAssassin</h2> 
+<p>
+	SpamAssassin has <a href="http://spamassassin.taint.org/sitewide.html">a page about using it for sitewide mail tagging</a>. Read it.
+</p>
+<p>
+	The simplest thing to do is to change the call from your local .procmailrc file and install it in your system /etc/procmailrc file, which is where global filtering on all mail is done. (Notice that there's no . in /etc/procmailrc.) You should change this a little, so you aren't running SpamAssassin as root, which might cause all kinds of unforseen difficulty:
+</p>
+<pre>DROPPRIVS=yes 
+
+
+:0fw 
+| spamassassin</pre> 
+<p>
+	If you get any kind of mail volume, though, you should look in to the spamc/spamd combo, which is written in C and runs as a daemon, therefore avoiding the need of spawning a new perl instance for every incoming mail message - in other words, running SpamAssassin faster and with less memory. spamc and spamd are already installed by the basic SpamAssassin install. You just need to get the spamd daemon running. You've still got the original /usr/local/src/Mail-SpamAssassin-2.43 directory, right?
+</p>
+<p>
+	Go there, then cd to &quot;spamd&quot;. You'll see a slew of .sh shell scripts. These are meant to be copied to the /etc/rc.d/init.d directory, to be run automatically on startup. You want the RedHat script. Copy it to its new home like so:
+</p>
+<pre>spamd# cp redhat-rc-script.sh /etc/rc.d/init.d/spamd.sh
+</pre> 
+<p>
+	Now you can start spamd like so:
+</p>
+<pre># /etc/rc.d/init.d/spamd.sh start</pre> 
+<p>
+	Check to make sure it's working:
+</p>
+<pre># /etc/rc.d/init.d/spamd.sh status</pre> 
+<p>
+	You can use &quot;restart&quot; if you change the /etc/mail/spamassassin/local.cf file and need to reload the configuration, or &quot;stop&quot; if you just need to shut spamd down. Now, go back to editing your /etc/procmailrc file, and change &quot;spamassassin&quot; to &quot;spamc&quot;:
+</p>
+<pre>:0fw 
+| spamc</pre> 
+<p>
+	Again, send yourself test mail to make sure this is working, but it should now be tagging mail for your whole site.
+</p>
+<p>
+Most people should do just fine with the default options for SpamAssassin, but if you find yourself needing to tweak things, there is a site which will <a href="http://www.yrex.com/spam/spamconfig.php">generate a configuration file for you.</a>
+</p>
+<p>
+	Many savvy users will be able to handle filtering on the changes SpamAssassin makes to a message (adding &quot;*****SPAM*****&quot; to the Subject: header, among other things) but for our site, I've written <a href="mua.html">step by step instructions for the Pegasus Mail and MS Outlook MUAs</a>.
+</p>
+<p>
+You should keep an eye on the SpamAssassin site and upgrade to the newest version regularly, since spammers frequently use SpamAssassin to test their messages against! Consequently older versions are notably less effective than newer ones.
+</p>
+<p>
+As you get more comfortable with SpamAssassin's configuration, you can start incorporating rulesets from the <a href="http://www.merchantsoverseas.com/wwwroot/gorilla/sa_rules.htm">Custom Rules Emporium</a>.
+</p>
+<h2>Downloading and Installing the Sanitizer</h2> 
+<p>
+	The Sanitizer &quot;defangs&quot; dangerous HTML and removes &quot;dangerous&quot; (i.e. executable, possibly viral) attachments. The Sanitizer comes with general rules often catch &quot;new&quot; viruses before a custom filter is needed. Since it reports by email and log files, it also includes some canned procmail recipies for recognizing common viruses like Code Red, BadTrans, and Klez and providing specific responses to them.
+</p>
+<p>
+	Log in to your system and <code>su -</code> to root. <code>cd</code> to /etc/ and make a new directory, <code>procmail/</code> which is where we will install the Sanitizer.
+</p>
+<p>
+	Download the Sanitizer tarball from the address given at <a href="http://www.impsec.org/email-tools/procmail-security.html"> http://www.impsec.org/email-tools/procmail-security.html</a>. 
+</p>
+<pre>
+wget http://www.impsec.org/email-tools/procmail-sanitizer.tar.gz
+</pre> 
+<p>
+	<code>tar -xzvf procmail-sanitizer.tar.gz</code> will undo the tarball. Most of the files you just unloaded are actually HTML documents which document The Sanitizer; the file named <code>sanitizer-configuration.html</code> details the installation of the software.
+</p>
+<p>
+	Copy the sample <code>/etc/procmailrc</code> <a href="http://www.impsec.org/email-tools/sanitizer-configuration.html">here</a> into the file you already created to run SpamAssassin. You may want to add a "MANGLE_EXTENSIONS=" line to override the default settings, which are <em>very</em> paranoid. We removed html, doc, xls, and vcf from the default list.
+</p>
+<p>
+	Also, the default settings expect a few files to already exist. First, you need a quarantine mailbox, <code>/var/spool/mail/quarantine</code> (you may want to comment out the per-user quarantine line unless you can set it up as a mailbox in your users' IMAP mail folder; if they use POP, don't bother.) You also need a log file for macro scanner scores and a procmail log...
+</p>
+<pre>
+touch /var/spool/mail/quarantine
+chown admin /var/spool/mail/quarantine
+chmod 622 /var/spool/mail/quarantine
+</pre> 
+<p>
+	...and so on for the other files.
+</p>
+<p>
+	You should also make sure the file <code>/etc/procmail/local-email-security-policy.txt</code> contains appropriate text for your site; that's what's going to people who send you viruses.
+</p>
+<p>
+	When you save <code>/etc/procmail</code>, <em>the Sanitizer is running.</em> You're done.
+</p>
+<h2>Other procmail-invoked filtering programs</h2> 
+<p>
+	We don't have detailed notes for each filter program, but we will list those we know, what they do, and where to get them.
+</p>
+<ul style="border-bottom: 1px solid #000;">
+	<li>
+		<a href="http://bogofilter.sourceforge.net/">bogofilter</a> - This is written to take advantage of the statistical analysis of words in spam mail vs. non-spam (&quot;ham&quot;) mail, a method sometimes called &quot;Naive Bayesian&quot; filtering. An advantage of this method is that it &quot;learns&quot; what spam looks like and what non-spam looks like, and how to distinguish them, rather than depending on a set of pre-defined rules. When I last looked, it was not quite production quality for an entire site, but I have used it on my own mail (after our sitewide SpamAssassin) and it did rather well. However, it looks like a very interesting approach; SpamAssassin is heading this way as well, as is the Mozilla MUA. It is called from procmail in much the same way as SpamAssassin, and both could be used together.
+	</li>
+	<li>
+		<a href="http://www.spambouncer.org/">SpamBouncer</a> - Similar to SpamAssassin, SpamBouncer will identify and tag/delete/bounce spam. (The jury is still very much out on whether bouncing spam actually does any good, but this is certainly competitive with SpamAssassin in the tagging arena.) 
+	</li>
+</ul>
+<p>
+	<a href="http://www.parkermorse.net/">Parker Morse</a>, <a href="http://bluebird.sinauer.com/~morse/">resident geek</a>, <a href="http://www.sinauer.com/">Sinauer Associates</a>
+</p>
+</body>
+</html>

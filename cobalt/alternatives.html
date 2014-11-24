@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>Alternatives</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<link rel="Stylesheet" rev="Stylesheet" href="../morse.css" />
+</head>
+<body>
+<h1>Alternatives</h1>
+<h2>You always have other options.</h2>
+<p>The two-tier defense system described here, using block-lists and procmail, 
+ has worked well for me. However, there are other techniques and technologies 
+ available for use in place of (or in combination with) what I've described here.</p>
+<h2>Malicious-code scanning</h2>
+<ul>
+ <li><a href="http://www.roaringpenguin.com/mimedefang/">MIMEDefang</a> is a sendmail 
+  &quot;milter&quot; which moves much of the work of The Sanitizer up to the sendmail 
+  level.</li>
+ <li><a href="http://mailtools.anomy.net/">Anomy Mail Tools</a> is another Sanitizer.</li>
+ <li><a href="http://www.amavis.org/">Amavis</a> is a mail virus scanner.</li>
+ <li>Steve Bassi wrote <a href="http://www.raqateers.com/">packages</a> to install 
+  <a href="http://www.sng.ecs.soton.ac.uk/mailscanner/">mailscanner</a> (free) 
+  and <a href="http://www.f-prot.com">F-Prot</a> (license required, check the 
+  site).</li>
+ <li>Joe Quinn detailed <a href="http://www.qitc.net/support/mailscanner/">his 
+  experiences installing Mailscanner and SpamAssassin</a> on a RaQ4. Very well 
+  done.</li>
+</ul>
+<h2>Spam blocking</h2>
+<h3>Whitelists</h3>
+<p> &quot;Whitelisting&quot; and &quot;greenlisting&quot; are methods of spam 
+ filtering which involve, in a nutshell, accepting mail from &quot;known good&quot; 
+ senders, and subjecting only unknown senders to intense filtering, perhaps even 
+ involving a challenge-and-response system to allow the sender to get themselves 
+ on the &quot;known good&quot; list. This is based on the idea that spammers will 
+ not bother to respond to the challenges. Nancy McGough, who wrote the excellent 
+ <a href="http://www.ii.com/internet/robots/procmail/qs/">procmail quick start</a>, 
+ has <a href="http://www.ii.com/internet/messaging/spam/">a good explanation of 
+ this approach to spam-blocking</a>, including links to some of the notable arguments 
+ against it (which can be summarized by the names sometimes applied to the challenge-and-response 
+ system, &quot;Prove that you love me&quot; or &quot;jump through my hoops.&quot;)</p>
+<p>These systems can be custom-built in procmail, if you're patient enough and 
+ ready to do a lot of reading in <a href="http://www.rosat.mpe-garching.mpg.de/mailing-lists/procmail/">the 
+ archives of the procmail list</a>. SpamAssassin will also do whitelisting, if 
+ you configure it properly. There are other pre-built systems which will do this:</p>
+<ul>
+ <li><a href="http://www.tmda.net/">TMDA</a> - Tagged Mail Delivery Agent. There's 
+  a VERY good explanation of how this works and what it does on the home page.</li>
+ <li><a href="http://www.johncon.com/john/Cmd/">CMD</a> - Confirmed Mail Delivery, 
+  a package by John Conover.</li>
+ <li><a href="http://www.habeas.com/">Habeas</a> - A sort of institutionalized 
+  white list. They explain it better than I do.</li>
+</ul>
+<h3>General reading</h3>
+<p>You'll do better administering your spam and anti-virus defenses if you have 
+ a better understanding of what they do, and what you're up against.</p>
+<ul style="border-bottom: 1px solid #000;">
+ <li><a href="http://www.paulgraham.com/spam.html">Paul Graham's &quot;A Plan 
+  For Spam&quot;</a> started the &quot;Bayesian filtering&quot; wave of filtering 
+  software, basing filters on a statistical analysis of what spam looks like vs. 
+  what a particular user's real mail looks like, and learning as it goes. Includes 
+  links to many of the responses, expansions, and actual software being developed 
+  to use this method to block spam.</li>
+ <li><a href="http://www.spamfaq.net/">spamfaq.net</a> is the FAQ for news.admin.net-abuse.email 
+  (or NANAE) and contains most of the anti-spam &quot;canon.&quot; </li>
+ <li>Philip Jacob <a href="http://theory.whirlycott.com/~phil/antispam/rbl-bad/rbl-bad.html">questions 
+  whether we're going about the spam problem in the right way at all.</a></li>
+</ul>
+<p><a href="http://www.parkermorse.net/">Parker Morse</a>, <a href="http://bluebird.sinauer.com/~morse/">resident 
+ geek</a>, <a href="http://www.sinauer.com/">Sinauer Associates</a></p>
+ </body>
+</html>

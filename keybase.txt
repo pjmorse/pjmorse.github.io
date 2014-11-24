@@ -1,0 +1,65 @@
+==================================================================
+https://keybase.io/flashesofpanic
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://parkermorse.net
+  * I am flashesofpanic (https://keybase.io/flashesofpanic) on keybase.
+  * I have a public key with fingerprint 9E62 8E6D AB58 0746 17B8  0457 C5AF D4D5 A72E D856
+
+To claim this, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "fingerprint": "9e628e6dab58074617b80457c5afd4d5a72ed856",
+            "host": "keybase.io",
+            "key_id": "c5afd4d5a72ed856",
+            "uid": "c6cdf264fcebd9491d198723cfb9e200",
+            "username": "flashesofpanic"
+        },
+        "service": {
+            "hostname": "parkermorse.net",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1411001406,
+    "expire_in": 157680000,
+    "prev": "383adb00288e403bd970a025c0e5c6ca0d1264e7cb85f251d74e22fcaac43285",
+    "seqno": 3,
+    "tag": "signature"
+}
+
+with the aforementioned key, yielding the PGP signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: Keybase OpenPGP v1.0.3
+Comment: https://keybase.io/crypto
+
+yMHtAnicbZFbSBRRGMd37eJqiVZLrdaDjBUEa839skaFGkYLiaZGi7LO5czupM7M
+zsx6YfMh8yEyX6IQIqSCJGKhjJAuhm5tFAi1uAQlRElIlAYFrWWldKbsrfNyON/3
++/7n/z8nmbfCkes82FcQpFxkgXNi/EfUUVfk3RNDBE3qQnwxpAX82WRFDQFDNxTV
+QnwIB2icBbTECxSLMiSNMQKLkhQjUrwskRLFMziQWIpGvEhYM+0JKCPwJtipaLAG
+D0FFgtX/8NG/DVqUZJwmZREIEkdymIRxLIMToixwAEdRGzSBofJtANJyK2+GganJ
+Oq8qItLtRWCvXRGB7dw2sMzpvNECjDbNgEZUYEER3dAsTdRaYTNsWbrPnrW6dBvu
+AEJwWSYoKKoEHwAOtAPDVDQV8WGQFC3F1sVIDENRjERpLwI6dcUAQcUmKIZmUbjs
+a0A7lCRYgpcEFMVZFpAoAZMxKI/ilIgCCibmUQmDmQEjCiwl4xQmMSTAcVnkeZEk
+cJZC7GARVUN8BLTJh6CkqYRU3ooaAOl+ON640uHMdaxelWV/oSM3p+Dfx3ZPZS+V
+fTIHiiL7XhLpyC1P6/rxz0uVkfm99THn4t1UYAszua7l3WI6c2ruQE9s7HbZOVf+
+h0xiwoUUvhrI2fS+xo+f2X30yOyg8zI42RC//+b0+eFynWsIaUt9bu9o6kkvOVKY
+2Bi/NK8d+3XvuGe252NxpsJR138968HCxa2pNeETV6q2US/y0v3u4knZ2azXupMz
+U1eno1TIHxfDmcFv/keeBWmu4vHbwPc7Tc+++mt2XXhd2ly6Nl0oDhP9cskMHqhu
+Olsx0nh4KvC8aijkIxKd0z9HPTezuOwbQ7VfXO7G6o7U9mvEocr8xP7NTHkyO/10
+LFm/oXd1bXxHSeY3a4gQPg==
+=yuQU
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/flashesofpanic
+
+==================================================================

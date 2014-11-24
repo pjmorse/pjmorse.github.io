@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>Filtering on SpamAssassin tags in Pegasus Mail and Outlook</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<link rel="Stylesheet" rev="Stylesheet" href="../morse.css" />
+</head>
+<body>
+<h1>Filtering SpamAssassin tags in the MUA</h1>
+<h2>For Pegasus Mail and Outlook</h2>
+<p>Most Mail User Agents now include some sort of mechanism for filtering email 
+ based on strings in the header or body of incoming email. I wrote the following 
+ Howto for users in our office using Pegasus Mail for Windows or Outlook for Windows, 
+ so they could filter out spam which had been tagged by our <a href="procmail.html">installation 
+ of SpamAssassin</a>.</p>
+<h2>In Pegasus:</h2>
+<p> I ran through this in Pegasus 4.</p>
+<ul>
+ <li> Under the &quot;Tools&quot; menu, select the &quot;Mail Filtering Rules&quot; 
+  sub-menu. In the sub-menu, select the &quot;Edit new mail filtering rules&quot; 
+  sub-sub-menu (don't get me started on this user interface) and finally the &quot;Rules 
+  Applied When A Folder Is Opened&quot; menu item.</li>
+ <li>This opens a new window which is probably blank.</li>
+ <li> Click the &quot;add rule&quot; button.</li>
+ <li> In the menu that pops up, click the &quot;Headers&quot; button at the very 
+  top.</li>
+ <li> Check the box next to &quot;Subject&quot;, and in the &quot;Contains this 
+  text&quot; box underneath, fill in: 
+  <ul>
+   <li> *****SPAM***** (That's five asterisks.)</li>
+  </ul>
+ </li>
+ <li> Then select the action &quot;Delete&quot; in the menu under &quot;Then do 
+  this:&quot;.</li>
+ <li> Click OK.</li>
+</ul>
+<p>&quot;Delete&quot; moves the message to your Deleted Items folder, and the 
+ message is probably going to be deleted when you close Pegasus. If you're not 
+ confident that everything thus tagged is actually spam, select &quot;Move&quot; 
+ under the &quot;Then do this:&quot; menu, and select a folder to route it all 
+ in to; you can then check the folder now and then for the falsely accused. </p>
+<h2> In Outlook:</h2>
+<p> I walked through this in Outlook XP.</p>
+<ul style="border-bottom: 1px solid #000;">
+ <li> Under the &quot;tools&quot; menu, click &quot;Rules Wizard.&quot;</li>
+ <li> Click the button which says, &quot;New...&quot;</li>
+ <li> Select the &quot;Start from a blank rule&quot; option, and select &quot;Check 
+  messages when they arrive.&quot; Click Next.</li>
+ <li> Check &quot;With specific words in the subject,&quot; then click the underlined 
+  phrase &quot;specific words&quot; in the &quot;Rule Description&quot; box. (Again, 
+  don't get me started about this user interface.)</li>
+ <li> In the resulting box, fill in &quot;*****SPAM*****&quot; (five asterisks, 
+  don't use the quotes) and click the &quot;Add&quot; button. Then click &quot;OK&quot; 
+  to return to the first box,</li>
+ <li> and click &quot;Next&quot; there.</li>
+ <li> Check &quot;delete it&quot; in the next window. Click Next.</li>
+ <li> In the next window, scroll down and check &quot;Except if sender is in specified 
+  address book.&quot; In the lower window, click &quot;specified&quot; (yuck) 
+  and pick &quot;Outlook Address Book&quot; in the resulting window. (This means 
+  Outlook won't trash a message which appears to come from someone in your address 
+  book.) Click &quot;OK&quot; to return to the main wizard. Click &quot;Next&quot;.</li>
+ <li> In the next window, check &quot;Turn this rule on immediately,&quot; and 
+  click &quot;Finish&quot;. Click &quot;OK&quot; to finish with the Rules window.</li>
+</ul>
+<p> <a href="http://www.parkermorse.net/">Parker Morse</a>, <a href="http://bluebird.sinauer.com/~morse/">resident 
+ geek</a>, <a href="http://www.sinauer.com/">Sinauer Associates</a></p>
+</body>
+</html>
