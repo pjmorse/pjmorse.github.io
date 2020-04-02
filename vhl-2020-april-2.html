@@ -17,16 +17,14 @@
         margin: 5px;
         padding-inline-start: unset;
       }
-      li {
+      li a {
         border: 1px solid #999;
         padding: 10px;
+        text-decoration: none;
       }
-      li:hover {
+      li a:hover {
         background-color: #f94;
         border-bottom: 3px solid #c72;
-      }
-      li a {
-        text-decoration: none;
       }
     </style>
   </head>
@@ -34,29 +32,29 @@
     <div class="topics-menu">
       <h3>Topics</h3>
       <ul class="menu">
-        <li>
+        <li class="menu-option">
           <a href="#architecture">
             Architecture
           </a>
         </li>
-        <li>
+        <li class="menu-option">
           <a href="#biology">
             Biology
           </a>
           <ul class="submenu">
-            <li>
+            <li class="submenu-option">
               <a href="#plants">
                 Plants
               </a>
             </li>
-            <li>
+            <li class="submenu-option">
               <a href="#animals">
                 Animals
               </a>
             </li>
           </ul>
         </li>
-        <li class="menu-item-disabled">
+        <li class="menu-option menu-option-disabled">
           Computer Science
         </li>
       </ul>
