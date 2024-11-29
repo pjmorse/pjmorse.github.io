@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting to github.com/pjmorse /</title>
+    <meta http-equiv="refresh" content="0; URL=https://github.com/pjmorse">
+    <link href="https://github.com/pjmorse" rel="me">
+    <link href="https://parkermorse.net" rel="me">
+    <link href="https://ruby.social/@flashesofpanic" rel="me">
+    <!-- Mastodon profile verification approach after Jeroen Mols: https://jeroenmols.com/blog/2022/11/26/mastodon-verify-github/ -->
+  </head>
+  <body />
+</html>
